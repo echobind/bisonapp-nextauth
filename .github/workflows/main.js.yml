@@ -76,6 +76,7 @@ jobs:
 
       # E2E Tests via Cypress
       - name: Run Cypress E2E Tests
+        id: cypress
         uses: cypress-io/github-action@v2
         with:
           # build: yarn build
@@ -89,14 +90,15 @@ jobs:
       - name: Upload Cypress Screenshots
         uses: actions/upload-artifact@v1
         # Only capture images on failure
-        if: failure()
+        if: ${{ steps.cypress.outcome == 'failure' }}
         with:
           name: cypress-screenshots
           path: cypress/screenshots
+
       - name: Upload Cypress Videos
         uses: actions/upload-artifact@v1
         # Test run video was always captured, so this action uses "always()" condition
-        if: always()
+        if: ${{ steps.cypress.outcome == 'success' || steps.cypress.outcome == 'failure' }}
         with:
           name: cypress-videos
           path: cypress/videos
