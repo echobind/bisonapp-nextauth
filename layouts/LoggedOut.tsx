@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Center, Flex, Text, Button } from '@chakra-ui/react';
-import NextLink from 'next/link';
+import { signIn } from 'next-auth/client';
 
 import { Logo } from '../components/Logo';
 
@@ -11,11 +11,9 @@ export function LoggedOutLayout({ children }) {
         <Flex p={4}>
           <Logo />
 
-          <NextLink href="/login" passHref>
-            <Button as="a" ml="auto" display={{ base: 'none', lg: 'inline-flex' }}>
-              Login
-            </Button>
-          </NextLink>
+          <Button ml="auto" display={{ base: 'none', lg: 'inline-flex' }} onClick={() => signIn()}>
+            Login
+          </Button>
         </Flex>
       </>
 

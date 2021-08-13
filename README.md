@@ -1,6 +1,6 @@
 <p align="center" style="text-align:center">
   <h1>MyBisonNextAuthApp</h1>
-  <p><img alt="CI STATUS" src="https://github.com/<OWNER>/<REPOSITORY>/workflows/main/badge.svg"/></p>
+  <p><img alt="CI STATUS" src="https://github.com/echobind/bisonapp-nextauth/workflows/main/badge.svg"/></p>
 </p>
 
 # Getting Started Tutorial

@@ -1,20 +1,23 @@
 import React from 'react';
-import { useRouter } from 'next/router';
 import { Box, Center, Flex, Text, Button } from '@chakra-ui/react';
+import { signOut } from 'next-auth/client';
+import { gql } from '@apollo/client';
 
 import { Logo } from '../components/Logo';
 import { Nav } from '../components/Nav';
-import { useAuth } from '../context/auth';
+import { useMeQuery } from '../types';
+
+export const ME_QUERY = gql`
+  query me {
+    me {
+      id
+      email
+    }
+  }
+`;
 
 export function LoggedInLayout({ children }) {
-  const { logout } = useAuth();
-  const router = useRouter();
-
-  async function handleLogout() {
-    logout();
-
-    await router.replace('/login');
-  }
+  useMeQuery();
 
   return (
     <Flex direction="column" minH="100vh">
@@ -24,12 +27,7 @@ export function LoggedInLayout({ children }) {
 
           <Nav />
 
-          <Button
-            as="a"
-            ml={16}
-            display={{ base: 'none', lg: 'inline-flex' }}
-            onClick={handleLogout}
-          >
+          <Button ml={16} display={{ base: 'none', lg: 'inline-flex' }} onClick={() => signOut()}>
             Logout
           </Button>
         </Flex>

@@ -3,7 +3,7 @@ describe('Logout', () => {
     cy.createUserAndLogin().then(() => {
       cy.visit('/');
       cy.findByText(/logout/i).click();
-      cy.location('pathname').should('equal', '/login');
+      cy.location('pathname').should('equal', '/');
     });
   });
 });

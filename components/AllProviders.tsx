@@ -2,7 +2,6 @@ import React from 'react';
 import { ChakraProvider, CSSReset } from '@chakra-ui/react';
 import { ApolloProvider } from '@apollo/client';
 
-import { AuthProvider } from '../context/auth';
 import { createApolloClient } from '../lib/apolloClient';
 import defaultTheme from '../chakra';
 
@@ -19,11 +18,9 @@ export function AllProviders({
   return (
     <ApolloProvider client={apolloClient}>
       <ChakraProvider theme={theme}>
-        <AuthProvider>
-          <CSSReset />
+        <CSSReset />
 
-          {children}
-        </AuthProvider>
+        {children}
       </ChakraProvider>
     </ApolloProvider>
   );

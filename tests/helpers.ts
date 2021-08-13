@@ -4,10 +4,13 @@ import childProcess from 'child_process';
 import request from 'supertest';
 import { User } from '@prisma/client';
 import { Client } from 'pg';
+import * as nextAuth from 'next-auth/client';
+import { Chance } from 'chance';
 
 import server, { GRAPHQL_PATH } from '../pages/api/graphql';
-import { appJwtForUser } from '../services/auth';
 import { prisma, connect, disconnect } from '../lib/prisma';
+
+const chance = new Chance();
 
 const exec = util.promisify(childProcess.exec);
 
@@ -29,16 +32,32 @@ export const graphQLRequest = async (options: GraphQLRequestOptions): Promise<an
 
 /** A convenience method to call graphQL queries as a specific user */
 export const graphQLRequestAsUser = async (
-  user: Partial<User>,
+  user: User,
   options: GraphQLRequestOptions
 ): Promise<any> => {
-  const token = appJwtForUser(user);
+  if (user) {
+    (nextAuth.getSession as any).mockResolvedValue(
+      await prisma.session.create({
+        data: {
+          accessToken: chance.string(),
+          expires: chance.date({ year: new Date().getFullYear() + 1 }),
+          sessionToken: chance.string(),
+          user: {
+            connect: {
+              id: user.id,
+            },
+          },
+        },
+      })
+    );
+  } else {
+    (nextAuth.getSession as any).mockResolvedValue(null);
+  }
 
   const response = await request(server)
     .post(GRAPHQL_PATH)
     .set('Content-Type', 'application/json')
     .set('Accept', 'application/json')
-    .set('Authorization', `Bearer ${token}`)
     .send(options);
 
   await disconnect();

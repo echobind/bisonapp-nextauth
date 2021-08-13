@@ -2,9 +2,9 @@ import { IncomingMessage } from 'http';
 
 import { Context as ApolloContext } from 'apollo-server-core';
 import { PrismaClient, User } from '@prisma/client';
+import { getSession } from 'next-auth/client';
 
 import { prisma } from '../lib/prisma';
-import { verifyAuthHeader } from '../services/auth';
 
 /**
  * Populates a context object for use in resolvers.
@@ -12,11 +12,18 @@ import { verifyAuthHeader } from '../services/auth';
  * @param context context from apollo server
  */
 export async function createContext(context: ApolloApiContext): Promise<Context> {
-  const authHeader = verifyAuthHeader(context.req.headers.authorization);
+  const session = await getSession({ req: context.req });
   let user: User | null = null;
 
-  if (authHeader) {
-    user = await prisma.user.findUnique({ where: { id: authHeader.userId } });
+  if (session) {
+    const sessionWithUser = await prisma.session.findUnique({
+      where: { accessToken: session.accessToken as string },
+      include: {
+        user: true,
+      },
+    });
+
+    user = sessionWithUser?.user;
   }
 
   return {

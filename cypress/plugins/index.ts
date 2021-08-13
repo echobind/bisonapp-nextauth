@@ -1,11 +1,7 @@
 // import 'cypress';
 import path from 'path';
 
-import { User } from '@prisma/client';
-
-import { cookies } from '../../lib/cookies';
-import { LOGIN_TOKEN_KEY } from '../../constants';
-import { resetDB, disconnect, setupDB, graphQLRequest } from '../../tests/helpers';
+import { resetDB, disconnect, setupDB } from '../../tests/helpers';
 import * as Factories from '../../tests/factories';
 
 declare global {
@@ -70,29 +66,5 @@ export default (on, _config) => {
       const Factory = Factories[`${name}Factory`];
       return Factory.create(attrs);
     },
-    login: (attrs: Pick<User, 'email' | 'password'>): Promise<LoginTaskObject> => {
-      const { email, password } = attrs;
-      const variables = { email, password };
-
-      const query = `
-        mutation login($email: String!, $password: String!) {
-          login(email: $email, password: $password) {
-            token
-          }
-        }
-      `;
-
-      return graphQLRequest({ query, variables }).then((response) => {
-        const { token } = response.body.data.login;
-
-        cookies().set(LOGIN_TOKEN_KEY, token);
-
-        return { token };
-      });
-    },
   });
 };
-
-export interface LoginTaskObject {
-  token: string;
-}

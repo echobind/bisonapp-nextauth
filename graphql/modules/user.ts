@@ -3,7 +3,6 @@ import {
   inputObjectType,
   queryField,
   mutationField,
-  stringArg,
   arg,
   nonNull,
   enumType,
@@ -12,7 +11,6 @@ import {
 import { Role } from '@prisma/client';
 import { UserInputError } from 'apollo-server-micro';
 
-import { hashPassword, appJwtForUser, comparePasswords } from '../../services/auth';
 import { canAccess, isAdmin } from '../../services/permissions';
 
 // User Type
@@ -28,29 +26,6 @@ export const User = objectType({
     // Show email as null for unauthorized users
     t.string('email', {
       resolve: (profile, _args, ctx) => (canAccess(profile, ctx) ? profile.email : null),
-    });
-
-    t.field('profile', {
-      type: 'Profile',
-      resolve: (parent, _, context) => {
-        return context.prisma.user
-          .findUnique({
-            where: { id: parent.id },
-          })
-          .profile();
-      },
-    });
-  },
-});
-
-// Auth Payload Type
-export const AuthPayload = objectType({
-  name: 'AuthPayload',
-  description: 'Payload returned if login or signup is successful',
-  definition(t) {
-    t.field('user', { type: 'User', description: 'The logged in user' });
-    t.string('token', {
-      description: 'The current JWT token. Use in Authentication header',
     });
   },
 });
@@ -81,75 +56,6 @@ export const findUniqueUserQuery = queryField('user', {
 });
 
 // Mutations
-export const loginMutation = mutationField('login', {
-  type: 'AuthPayload',
-  description: 'Login to an existing account',
-  args: {
-    email: nonNull(stringArg()),
-    password: nonNull(stringArg()),
-  },
-  resolve: async (_root, args, ctx) => {
-    const { email, password } = args;
-    const user = await ctx.db.user.findUnique({ where: { email } });
-
-    if (!user) {
-      throw new UserInputError(`No user found for email: ${email}`, {
-        invalidArgs: { email: 'is invalid' },
-      });
-    }
-
-    const valid = comparePasswords(password, user.password);
-
-    if (!valid) {
-      throw new UserInputError('Invalid password', {
-        invalidArgs: { password: 'is invalid' },
-      });
-    }
-
-    const token = appJwtForUser(user);
-
-    return {
-      token,
-      user,
-    };
-  },
-});
-
-export const signupMutation = mutationField('signup', {
-  type: 'AuthPayload',
-  description: 'Signup for an account',
-  args: {
-    data: nonNull(arg({ type: 'SignupInput' })),
-  },
-  resolve: async (_root, args, ctx) => {
-    const { data } = args;
-    const existingUser = await ctx.db.user.findUnique({ where: { email: data.email } });
-
-    if (existingUser) {
-      throw new UserInputError('Email already exists.', {
-        invalidArgs: { email: 'already exists' },
-      });
-    }
-
-    // force role to user and hash the password
-    const updatedArgs = {
-      data: {
-        ...data,
-        roles: { set: [Role.USER] },
-        password: hashPassword(data.password),
-      },
-    };
-
-    const user = await ctx.db.user.create(updatedArgs);
-    const token = appJwtForUser(user);
-
-    return {
-      user,
-      token,
-    };
-  },
-});
-
 export const createUserMutation = mutationField('createUser', {
   type: 'User',
   description: 'Create User for an account',
@@ -167,49 +73,16 @@ export const createUserMutation = mutationField('createUser', {
       });
     }
 
-    // force role to user and hash the password
+    // force role to user
     const updatedArgs = {
       data: {
         ...data,
-        password: hashPassword(data.password),
       },
     };
 
     const user = await ctx.db.user.create(updatedArgs);
 
     return user;
-  },
-});
-
-// Inputs
-export const SignupProfileCreateInput = inputObjectType({
-  name: 'SignupProfileCreateInput',
-  description: 'Input required for Profile Create on Signup.',
-  definition: (t) => {
-    t.nonNull.string('firstName');
-    t.nonNull.string('lastName');
-  },
-});
-
-export const SignupProfileInput = inputObjectType({
-  name: 'SignupProfileInput',
-  description: 'Input required for Profile on Signup.',
-  definition: (t) => {
-    t.nonNull.field('create', {
-      type: SignupProfileCreateInput,
-    });
-  },
-});
-
-export const SignupInput = inputObjectType({
-  name: 'SignupInput',
-  description: 'Input required for a user to signup',
-  definition: (t) => {
-    t.nonNull.string('email');
-    t.nonNull.string('password');
-    t.nonNull.field('profile', {
-      type: SignupProfileInput,
-    });
   },
 });
 
@@ -252,7 +125,6 @@ export const UserCreateInput = inputObjectType({
   description: 'Input to Add a new user',
   definition(t) {
     t.nonNull.string('email');
-    t.nonNull.string('password');
     t.field('roles', {
       type: list('Role'),
     });

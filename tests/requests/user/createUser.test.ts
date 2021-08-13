@@ -3,6 +3,8 @@ import { Role } from '@prisma/client';
 import { resetDB, disconnect, graphQLRequestAsUser } from '../../helpers';
 import { UserFactory } from '../../factories/user';
 
+jest.mock('next-auth/client');
+
 beforeEach(async () => resetDB());
 afterAll(async () => disconnect());
 
@@ -20,7 +22,7 @@ describe('User createUser mutation', () => {
 
       const user = await UserFactory.create({ email: 'foo@wee.net' });
 
-      const variables = { data: { email: user.email, password: 'fake' } };
+      const variables = { data: { email: user.email } };
       const response = await graphQLRequestAsUser(user, { query, variables });
       const errorMessages = response.body.errors.map((e) => e.message);
 
@@ -46,7 +48,7 @@ describe('User createUser mutation', () => {
       const admin = await UserFactory.create({ roles: { set: [Role.ADMIN] } });
 
       const variables = {
-        data: { email: 'hello@wee.net', password: 'fake', roles: [Role.ADMIN] },
+        data: { email: 'hello@wee.net', roles: [Role.ADMIN] },
       };
 
       const response = await graphQLRequestAsUser(admin, { query, variables });

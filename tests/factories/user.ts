@@ -2,7 +2,6 @@ import Chance from 'chance';
 import { Role, Prisma } from '@prisma/client';
 
 import { buildPrismaIncludeFromAttrs, prisma } from '../helpers';
-import { hashPassword } from '../../services/auth';
 
 const chance = new Chance();
 
@@ -10,7 +9,6 @@ export const UserFactory = {
   build: (attrs: Partial<Prisma.UserCreateInput> = {}) => {
     return {
       email: chance.email(),
-      password: 'test1234',
       roles: { set: [Role.USER] },
       ...attrs,
     };
@@ -23,7 +21,7 @@ export const UserFactory = {
     if (includes) options.include = includes;
 
     return await prisma.user.create({
-      data: { ...user, password: hashPassword(user.password), roles: user.roles as any },
+      data: { ...user, roles: user.roles },
       ...options,
     });
   },

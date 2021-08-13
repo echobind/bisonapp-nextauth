@@ -3,6 +3,8 @@ import { Role } from '@prisma/client';
 import { graphQLRequest, graphQLRequestAsUser, resetDB, disconnect } from '../../helpers';
 import { UserFactory } from '../../factories/user';
 
+jest.mock('next-auth/client');
+
 beforeEach(async () => resetDB());
 afterAll(async () => disconnect());
 

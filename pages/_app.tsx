@@ -1,8 +1,8 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
+import { Provider, useSession } from 'next-auth/client';
 
 import { AllProviders } from '../components/AllProviders';
-import { useAuth } from '../context/auth';
 
 /**
  * Dynamically load layouts. This codesplits and prevents code from the logged in layout from being
@@ -17,12 +17,12 @@ const LoggedOutLayout = dynamic(() =>
 );
 
 /**
- * Renders a layout depending on the result of the useAuth hook
+ * Renders a layout depending on the result of the useSession hook
  */
 function AppWithAuth({ children }) {
-  const { user } = useAuth();
+  const [session] = useSession();
 
-  return user ? (
+  return session ? (
     <LoggedInLayout>{children}</LoggedInLayout>
   ) : (
     <LoggedOutLayout>{children}</LoggedOutLayout>
@@ -32,9 +32,11 @@ function AppWithAuth({ children }) {
 function App({ pageProps, Component }) {
   return (
     <AllProviders>
-      <AppWithAuth>
-        <Component {...pageProps} />
-      </AppWithAuth>
+      <Provider session={pageProps.session}>
+        <AppWithAuth>
+          <Component {...pageProps} />
+        </AppWithAuth>
+      </Provider>
     </AllProviders>
   );
 }
