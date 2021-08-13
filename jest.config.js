@@ -9,6 +9,7 @@ const testPathIgnorePatterns = [
 module.exports = {
   preset: 'ts-jest',
   rootDir: 'tests',
+  testEnvironment: 'jsdom',
   // testEnvironment: join(__dirname, 'tests', 'nexus-test-environment.js'),
   // setupFilesAfterEnv: ['<rootDir>/tests/jest.setup.ts'],
   globalSetup: '<rootDir>/jest.setup.js',
